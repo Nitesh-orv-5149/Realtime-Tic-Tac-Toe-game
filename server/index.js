@@ -19,6 +19,7 @@ const io = new Server(server, {
 const dimensions = 3
 let board = Array(dimensions * dimensions).fill(null)
 let turn = "⭕"
+let winner = null
 
 io.on("connection", (socket) => {
   console.log(`User connected: ${socket.id}`)
@@ -26,6 +27,8 @@ io.on("connection", (socket) => {
   socket.emit("boardUpdate", { board, turn })
 
   socket.on("playerMove", (index) => {
+    if (winner !== null) return
+
     if (board[index]) return
 
     board[index] = turn
@@ -35,17 +38,25 @@ io.on("connection", (socket) => {
     io.emit("boardUpdate", { board, turn }) 
     console.log(board)
     
-    const winner = checkWinner(board)
-    if (winner === null) return
-    console.log(winner)
-
-    io.emit("winner", winner)
+    const gameWinner = checkWinner(board)
+    
+    if (gameWinner !== null) {
+      winner = gameWinner
+      console.log(winner)
+      io.emit("winner", winner)
+    }
   })
 
   socket.on("reset", () => {
+    if (dimensions === null) {
+      console.log("no dimension")
+    }
     board = Array(dimensions * dimensions).fill(null)
     turn = "⭕"
-    io.emit("boardUpdate", { board, turn })
+    winner = null
+    console.log(winner)
+    io.emit("winner", null)
+    io.emit("boardUpdate", { board, turn, winner })
   })
 
   socket.on("disconnect", () => {

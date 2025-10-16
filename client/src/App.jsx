@@ -10,11 +10,20 @@ function App() {
   const [winner, setWinner] = useState(null)
 
   useEffect(() => {
-    socket.on("winner", (winner) => {
-      setWinner(winner.winner)
-    })
+    const winnerHandler = (winner) => {
+      if (winner === null) {
+        setWinner(null)
+      } else {
+        setWinner(winner.winner)
+      }
+    }
+
+    socket.on("winner", winnerHandler)
+
+    return () => {
+      socket.off("winner", winnerHandler)
+    }
   }, [])
-  
 
   return (
     <>
